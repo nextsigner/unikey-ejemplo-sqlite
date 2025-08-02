@@ -1,1 +1,1 @@
-Se agrega boton eliminar seleccionado
+Se agrega archivo de version
