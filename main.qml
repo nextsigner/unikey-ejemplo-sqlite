@@ -103,7 +103,7 @@ ApplicationWindow{
                     Item{width: 1; height: app.fs}
                     Row{
                         id: rowTiInsDatos
-                        spacing: app.fs*0.25
+                        spacing: app.fs//*0.25
                         Repeater{
                             id: repTiInsDatos
                             Item{
@@ -118,12 +118,26 @@ ApplicationWindow{
                                     anchors.bottomMargin: app.fs*0.1
                                 }
                                 Rectangle{
-                                    width: parent.width
+                                    width: parent.width+app.fs*0.25
                                     height: app.fs*1.5
                                     color: 'black'
                                     border.width: 3
                                     border.color: 'white'
                                     clip: true
+                                    SequentialAnimation on border.color{
+                                        running: tiDato.focus
+                                        loops: Animation.Infinite
+                                        ColorAnimation {
+                                            from: "yellow"
+                                            to: "red"
+                                            duration: 250
+                                        }
+                                        ColorAnimation {
+                                            from: "red"
+                                            to: "yellow"
+                                            duration: 250
+                                        }
+                                    }
                                     TextInput{
                                         id: tiDato
                                         width: parent.width-4
@@ -131,6 +145,9 @@ ApplicationWindow{
                                         font.pixelSize: height*0.8
                                         color: 'white'
                                         anchors.centerIn: parent
+                                        //Keys.onTabPressed: toTab(false)
+                                        Keys.onEnterPressed: toTab(false)
+                                        Keys.onReturnPressed: toTab(false)
                                         DoubleValidator {
                                             id: dv
                                             decimals: 2
@@ -157,6 +174,7 @@ ApplicationWindow{
                             }
                         }
                         Button{
+                            id: botInsertar
                             text: 'Insertar'
                             anchors.verticalCenter: parent.verticalCenter
                             onClicked: {
@@ -171,10 +189,33 @@ ApplicationWindow{
                                         return
                                     }
                                     recargarLista('DESC')
+                                    rowTiInsDatos.children[1].children[1].children[0].focus=true
                                 }else{
                                     xMsg.msg='Error!\nPara redistrar un dato hay que llenar todos los campos de texto.'
                                 }
 
+                            }
+                            Rectangle{
+                                width: parent.width+border.width*2
+                                height: parent.height+border.width*2
+                                color: 'transparent'
+                                border.width: 3
+                                border.color: 'white'
+                                clip: true
+                                SequentialAnimation on border.color{
+                                    running: botInsertar.focus
+                                    loops: Animation.Infinite
+                                    ColorAnimation {
+                                        from: "yellow"
+                                        to: "red"
+                                        duration: 250
+                                    }
+                                    ColorAnimation {
+                                        from: "red"
+                                        to: "yellow"
+                                        duration: 250
+                                    }
+                                }
                             }
                         }
                     }
@@ -245,10 +286,15 @@ ApplicationWindow{
             id: xItem
             width: lv.width
             height: app.fs*1.2
-            color: 'black'
+            color: lv.currentIndex===index?'white':'black'
             border.width: 1
-            border.color: 'white'
+            border.color: !lv.currentIndex===index?'white':'gray'
             property var aAnchos: [100,500,100,100,100]
+            property bool selected: lv.currentIndex===index
+            MouseArea{
+                anchors.fill: parent
+                onClicked: lv.currentIndex=index
+            }
             Row{
                 id: row2
                 Repeater{
@@ -256,15 +302,15 @@ ApplicationWindow{
                     Rectangle{
                         width: rowCab.children[index].width
                         height: app.fs*1.2
-                        color: 'black'
+                        color: xItem.selected?'white':'black'
                         border.width: 1
-                        border.color: 'white'
+                        border.color: !xItem.selected?'white':'black'
                         clip: true
                         Text{
                             id: txt
                             text: modelData//'aa->'+d//xItem.aRowData[0]//rwp.model[index]
                             font.pixelSize: app.fs
-                            color: 'white'
+                            color: !xItem.selected?'white':'black'
                             anchors.centerIn: parent
                             visible: contentWidth<parent.width-app.fs*0.25
                             Timer{
@@ -315,9 +361,51 @@ ApplicationWindow{
         recargarLista('ASC')
     }
     Shortcut{
+        sequence: 'Enter'
+        onActivated: {
+            if(botInsertar.focus){
+                botInsertar.clicked()
+            }
+        }
+    }
+    Shortcut{
+        sequence: 'Return'
+        onActivated: {
+            if(botInsertar.focus){
+                botInsertar.clicked()
+            }
+        }
+    }
+    Shortcut{
+        sequence: 'Tab'
+        onActivated: {
+            toTab(false)
+        }
+    }
+    Shortcut{
         sequence: 'Esc'
         onActivated: {
             Qt.quit()
+        }
+    }
+    Shortcut{
+        sequence: 'Down'
+        onActivated: {
+            if(lv.currentIndex<lm.count){
+                lv.currentIndex++
+            }else{
+                lv.currentIndex=0
+            }
+        }
+    }
+    Shortcut{
+        sequence: 'Up'
+        onActivated: {
+            if(lv.currentIndex>0){
+                lv.currentIndex--
+            }else{
+                lv.currentIndex=lm.count-1
+            }
         }
     }
     function recargarLista(orden){
@@ -349,5 +437,20 @@ ApplicationWindow{
         let sql = 'DELETE FROM '+tableName
         let q = unik.sqlQuery(sql)
         recargarLista('ASC')
+    }
+    function toTab(ctrl){
+        if(!ctrl){
+            if(rowTiInsDatos.children[1].children[1].children[0].focus){
+                rowTiInsDatos.children[2].children[1].children[0].focus=true
+            }else if(rowTiInsDatos.children[2].children[1].children[0].focus){
+                rowTiInsDatos.children[3].children[1].children[0].focus=true
+            }else if(rowTiInsDatos.children[3].children[1].children[0].focus){
+                rowTiInsDatos.children[4].children[1].children[0].focus=true
+            }else if(rowTiInsDatos.children[4].children[1].children[0].focus){
+                botInsertar.focus=true
+            }else{
+                rowTiInsDatos.children[1].children[1].children[0].focus=true
+            }
+        }
     }
 }
