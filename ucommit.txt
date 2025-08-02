@@ -1,1 +1,1 @@
-Se agregan señaladores de focus y down and up para seleccionar fila
+Se agrega boton eliminar seleccionado

@@ -74,6 +74,7 @@ ApplicationWindow{
                         model: lm
                         delegate: compLvRow
                         clip: true
+                        onCurrentIndexChanged: lv.focus=true
                         ListModel{
                             id: lm
                             function add(datos){
@@ -201,7 +202,7 @@ ApplicationWindow{
                                 color: 'transparent'
                                 border.width: 3
                                 border.color: 'white'
-                                clip: true
+                                anchors.centerIn: parent
                                 SequentialAnimation on border.color{
                                     running: botInsertar.focus
                                     loops: Animation.Infinite
@@ -220,6 +221,12 @@ ApplicationWindow{
                         }
                     }
                     Row{
+                        spacing: app.fs*0.5
+                        Button{
+                            text: 'Eliminar Seleccionado'
+                            visible: lv.currentIndex>=0 && lv.currentIndex<lm.count
+                            onClicked: eliminarSeleccionado()
+                        }
                         Button{
                             text: 'Eliminar Todo'
                             onClicked: eliminarTodo()
@@ -363,6 +370,10 @@ ApplicationWindow{
     Shortcut{
         sequence: 'Enter'
         onActivated: {
+            if(xMsg.msg!==''){
+                xMsg.msg=''
+                return
+            }
             if(botInsertar.focus){
                 botInsertar.clicked()
             }
@@ -371,6 +382,10 @@ ApplicationWindow{
     Shortcut{
         sequence: 'Return'
         onActivated: {
+            if(xMsg.msg!==''){
+                xMsg.msg=''
+                return
+            }
             if(botInsertar.focus){
                 botInsertar.clicked()
             }
@@ -385,6 +400,14 @@ ApplicationWindow{
     Shortcut{
         sequence: 'Esc'
         onActivated: {
+            if(lv.currentIndex>=0){
+                lv.currentIndex=-1
+                return
+            }
+            if(xMsg.msg!==''){
+                xMsg.msg=''
+                return
+            }
             Qt.quit()
         }
     }
@@ -401,10 +424,20 @@ ApplicationWindow{
     Shortcut{
         sequence: 'Up'
         onActivated: {
-            if(lv.currentIndex>0){
+            if(lv.currentIndex>=0){
                 lv.currentIndex--
             }else{
                 lv.currentIndex=lm.count-1
+            }
+        }
+    }
+    Shortcut{
+        sequence: 'DELETE'
+        onActivated: {
+            if(lv.currentIndex>=0 && lv.currentIndex<lm.count){
+                eliminarSeleccionado()
+            }else{
+                xMsg.msg='No se eliminó ningún registro.\nPara eliminar un registro, primero hay que seleccionar uno.'
             }
         }
     }
@@ -435,6 +468,14 @@ ApplicationWindow{
     function eliminarTodo(){
         const tableName = "productos";
         let sql = 'DELETE FROM '+tableName
+        let q = unik.sqlQuery(sql)
+        recargarLista('ASC')
+    }
+    function eliminarSeleccionado(){
+        let vid=lm.get(lv.currentIndex).d0
+        //xMsg.msg='Id: '+vid
+        const tableName = "productos";
+        let sql = 'DELETE FROM '+tableName+' WHERE id = '+vid+';'
         let q = unik.sqlQuery(sql)
         recargarLista('ASC')
     }
